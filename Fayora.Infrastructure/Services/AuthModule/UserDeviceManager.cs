@@ -1,0 +1,24 @@
+﻿using Fayora.Application.Common.Interfaces.Persistences.IdentityModule;
+using Fayora.Application.Common.Interfaces.Services.AuthModule;
+using Fayora.Domain.Entities.IdentityModule;
+using Fayora.Domain.Enums.IdentityModule;
+
+namespace Fayora.Infrastructure.Services.AuthModule;
+
+public class UserDeviceManager(IDeviceRepository deviceRepository) : IUserDeviceManager
+{
+    public async Task UpsertDeviceAsync(Guid userId, string deviceId, Language deviceLanguage, CancellationToken cancellationToken = default)
+    {
+        var device = await deviceRepository.GetDeviceByUserIdAndDeviceIdAsync(userId, deviceId, cancellationToken, isTracking: true);
+
+        if (device is null)
+        {
+            device = new UserDevice(userId, deviceId, deviceLanguage);
+            deviceRepository.AddDevice(device);
+        }
+        else
+        {
+            device.UpdateInfo(deviceLanguage);
+        }
+    }
+}

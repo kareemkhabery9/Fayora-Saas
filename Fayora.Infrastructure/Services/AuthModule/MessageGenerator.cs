@@ -1,0 +1,89 @@
+using Fayora.Application.Common.Interfaces.Services.AuthModule;
+using System.Security.Cryptography;
+using static Fayora.Application.Common.Interfaces.Services.AuthModule.IMessageGenerator;
+
+namespace Fayora.Infrastructure.Services.AuthModule;
+
+public class MessageGenerator : IMessageGenerator
+{
+    public string GenerateCode(int length = 6)
+    {
+        var random = RandomNumberGenerator.GetInt32(0, (int)Math.Pow(10, length));
+        return random.ToString($"D{length}");
+    }
+
+    public (string Subject, string Body) CreateEmailMessage(MessagePurpose purpose, string? code = null)
+    {
+        return purpose switch
+        {
+            MessagePurpose.Registration => (
+                Subject: "Welcome to Fayora!",
+                Body: $"Welcome to Fayora! Your verification code is: {code}"
+            ),
+            MessagePurpose.ResetPassword => (
+                Subject: "Password Reset Code",
+                Body: $"Your password reset code is: {code}. Please do not share this with anyone."
+            ),
+            MessagePurpose.ChangeEmail => (
+                Subject: "Verify Your New Email",
+                Body: $"You requested to change your email address. Your verification code is: {code}"
+            ),
+            MessagePurpose.AccountDeletion => (
+                Subject: "Account Deletion Request",
+                Body: $"We received a request to delete your Fayora account. Your verification code is: {code}. If you didn't request this, contact support immediately."
+            ),
+            MessagePurpose.ReactivateAccount => (
+                Subject: "Reactivate Your Account",
+                Body: $"Welcome back! Your code to reactivate your account is: {code}"
+            ),
+            MessagePurpose.EmailVerified => (
+                Subject: "Email Verified",
+                Body: "Your email address has been successfully verified. Thank you for confirming your contact information!"
+            ),
+            MessagePurpose.Login => (
+                Subject: "Fayora Admin Login Verification Code",
+                Body: $"Your admin login verification code is: {code}. Please enter this code to complete your login. Do NOT share this code with anyone."
+            ),
+            _ => (
+                Subject: "Fayora Security Code",
+                Body: $"Your Fayora verification code is: {code}"
+            )
+        };
+    }
+
+    public string CreateSmsMessage(MessagePurpose purpose, string? code = null)
+    {
+        return purpose switch
+        {
+            MessagePurpose.Registration => $"Fayora: Your registration code is {code}",
+
+            MessagePurpose.ResetPassword => $"Fayora: Password reset code is {code}. Do NOT share this.",
+
+            MessagePurpose.ChangePhone => $"Fayora: Code to change phone number is {code}",
+
+            MessagePurpose.AccountDeletion => $"Fayora: Account deletion code is {code}. Do NOT share this.",
+
+            MessagePurpose.ReactivateAccount => $"Fayora: Account reactivation code is {code}",
+
+            _ => $"Fayora code: {code}"
+        };
+    }
+
+    public string CreateWhatsAppMessage(MessagePurpose purpose, string code)
+    {
+        return purpose switch
+        {
+            MessagePurpose.Registration => $"Welcome to Fayora! 🌍\nYour registration code is: *{code}*\n\nPlease do not share this code with anyone.",
+
+            MessagePurpose.ResetPassword => $"Fayora 🔒\nYour password reset code is: *{code}*\n\nDo NOT share this code with anyone.",
+
+            MessagePurpose.ChangePhone => $"Fayora 📱\nYour code to change your phone number is: *{code}*",
+
+            MessagePurpose.AccountDeletion => $"Fayora ⚠️\nWe received a request to delete your account.\nYour verification code is: *{code}*\n\nIf you didn't request this, please ignore this message.",
+
+            MessagePurpose.ReactivateAccount => $"Welcome back to Fayora! ✨\nYour account reactivation code is: *{code}*",
+
+            _ => $"Fayora security code: *{code}*"
+        };
+    }
+}
